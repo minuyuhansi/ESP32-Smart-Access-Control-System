@@ -148,6 +148,24 @@ void loop() {
   </div>
 
   <script>
+// locked voice
+  function speakLockMessage() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); 
+    
+    let msg = new SpeechSynthesisUtterance("System Locked, Please restart device");
+    msg.rate = 0.9;  
+    msg.pitch = 1.0; 
+    msg.lang = 'en-US';
+
+    msg.onend = function() {
+      window.speechSynthesis.speak(msg);
+    };
+    
+    window.speechSynthesis.speak(msg);
+  }
+}
+
     function login() {
       let u = document.getElementById('username').value;
       let p = document.getElementById('password').value;
@@ -164,17 +182,17 @@ void loop() {
         } else {
           statusDiv.className = 'alert-box alert-danger';
           
-          // Check if system got locked
+          // if system locked
           if(data.locked) {
-            // Requirement 10: Locked status update & instructions
             document.getElementById('topBanner').style.display = 'flex';
             document.body.classList.add('locked-bg');
-            statusDiv.innerText = 'Please restart device';
+            statusDiv.innerText = 'Please restart device!';
             
-            // Disable UI inputs
             document.getElementById('username').disabled = true;
             document.getElementById('password').disabled = true;
             document.getElementById('loginBtn').disabled = true;
+
+            speakLockMessage();
           } else {
             statusDiv.innerText = data.message;
           }
@@ -183,6 +201,7 @@ void loop() {
         document.getElementById('attempts').innerText = 'Failed Attempts: ' + data.attempts + '/3';
       });
     }
+
   </script>
 </body>
 </html>
@@ -211,6 +230,8 @@ void loop() {
     int uIndex = request.indexOf("username=");
     int pIndex = request.indexOf("password=");
 
+    // /login?username=admin&password=1234 HTTP/1.1
+
     if (uIndex != -1 && pIndex != -1) {
       int uEnd = request.indexOf("&", uIndex);
       reqUser = request.substring(uIndex + 9, uEnd);
@@ -220,10 +241,10 @@ void loop() {
       reqPass = request.substring(pIndex + 9, pEnd);
     }
 
-    // check Credentials
+    // check credentials
     if (reqUser == "admin" && reqPass == "1234") {
       failedAttempts = 0;
-      setLED(true, false, false);  // Green ON
+      setLED(true, false, false);  // green on
       client.println(R"({
         "success": true,
         "status": "ACCESS_GRANTED",
@@ -232,7 +253,7 @@ void loop() {
         "locked": false
       })");
     } else {
-      // incorrect Login
+      // system lock state
       failedAttempts++;
       if (failedAttempts >= 3) {
         isLocked = true;
@@ -245,7 +266,7 @@ void loop() {
           "locked": true
         })");
       } else {
-        setLED(false, false, true);  // Red ON
+        setLED(false, false, true);  // red on
         String jsonRes = String(R"({
           "success": false,
           "status": "ACCESS_DENIED",
