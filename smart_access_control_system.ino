@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
-const String ssid = "<userssid_here>";
-const String password = "<user_pw_here>";
+const String ssid = "<wifi_ssid_here>";
+const String password = "<wifi_pw_here>";
 WiFiServer server = WiFiServer(80);
 
 // led pins
